@@ -3,6 +3,7 @@ import logger from 'morgan'
 import cors from 'cors'
 import { config } from 'dotenv'
 import { Express } from 'express'
+import mongoSetUp from './configs/mongoose'
 
 const envConfig = config()
 
@@ -17,5 +18,7 @@ export default function(app) {
    app.use(cors())
 
    app.use(bodyParser.json())
-   app.use(bodyParser.urlencoded({extended: false}))
+   app.use(bodyParser.urlencoded({extended: true, limit: '50mb'}))
+
+   mongoSetUp()
 }
