@@ -1,5 +1,6 @@
 import express from 'express'
 import config from './config'
+import router from './router'
 
 
 const server = {
@@ -9,6 +10,7 @@ const server = {
         const app = express()
 
         config(app)
+        router(app)
 
         const port = app.get('config').PORT
         this._server = app.listen(port, () => {
