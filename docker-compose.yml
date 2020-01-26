@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  node:
+    image: 'node:lts'
+    ports: 
+      - 9000:${PORT}
+    volumes: 
+      - ./:/app
+    working_dir: /app
+    command: 'bash docker/nodejs/init.sh'
+    depends_on:
+      - mongo
+
+  mongo:
+    image: 'mongo:latest'
+    volumes: 
+      - datainspect-mongo:/data/db
+    environment: 
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
+      MONGO_INITDB_ROOT_DATABASE: ${DB_NAME}
+    
+volumes:
+  datainspect-mongo:
