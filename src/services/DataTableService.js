@@ -18,10 +18,17 @@ class DataTableService {
             })
 
             rl.on('line', (line) => {
+                const formattedLine = line
+                    .split(',')
+                    .map((d) => d.replace(/"(.*)"/, '$1'))
+
                 if (nLine === 0) {
-                    headers = line.split(',')
+                    headers = this._getDataHeaderObject(formattedLine)
+                    console.log(headers)
                 } else {
-                    data.push(line.split(','))
+                    data.push(
+                        this._getDataRowObject(headers, formattedLine)
+                    )
                 }
                 
                 nLine++
@@ -38,6 +45,34 @@ class DataTableService {
                 )
             })
         })
+    }
+    
+    /**
+     * Return a list of headers in a formatted object
+     * 
+     * @param {[String]} headers 
+     * 
+     * @returns {[Object]}
+     */
+    static _getDataHeaderObject(headers) {
+        return headers.map((header) => ({
+                name: header,
+                key: header
+                    .replace(/^([A-Z])/, (r) => r.toLowerCase())
+                    .replace(/\s(\w)/g, (r) => r.trim().toUpperCase())
+            })
+        )
+    }
+
+    /**
+     * 
+     * @param {[Object]} headersData 
+     * @param {[String]} row 
+     */
+    static _getDataRowObject(headersData, row) {
+        return row.reduce((obj, data, i) =>
+            Object.defineProperty(obj, headersData[i].key, {value: data, enumerable: true})
+        , {})
     }
 }
 
