@@ -8,5 +8,5 @@ import { Express } from 'express'
  */
 export default function(app) {
     app.use('/', index)
-    app.use('data-panel', dataPanel)
+    app.use('/data-panel', dataPanel)
 }
