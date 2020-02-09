@@ -4,17 +4,15 @@ import DataTableService from '../services/DataTableService'
 
 const router = express.Router()
 
-router.post('/load-data', (req, res) => {
+router.post('/load-data', (req, res, next) => {
     let form = new formidable.IncomingForm()
-    let parseResult = {error: false, message: 'Data recieved'}
 
     form.parse(req, async (err, fields, files) => {
         if (err) {
-            parseResult = {
-                error: true,
-                message: 'Error parsing form data'
-            }
-
+            next({
+                msg: 'Error parsing form data',
+                ctx: err
+            })
             return
         }
 
@@ -27,19 +25,20 @@ router.post('/load-data', (req, res) => {
             dataTable.save()
 
         } catch(err) {
-            parseResult = {
-                error: true,
-                message: 'Error processing data file'
-            }
+            next({
+                msg: 'Error processing data file',
+                ctx: err
+            })
+            return
         }
 
-    })
+        res
+            .status(200)
+            .json({
+                message: 'Data recieved'
+            })
 
-    res
-        .status(parseResult.error ? 500 : 200)
-        .json({
-            message: parseResult.message
-        })
+    })
 })
 
 export default router

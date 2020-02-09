@@ -20,18 +20,21 @@ class DataTableService {
             rl.on('line', (line) => {
                 const formattedLine = line
                     .split(',')
-                    .map((d) => d.replace(/"(.*)"/, '$1'))
+                    .map((d) => d.replace(/"(.*)"/, '$1').trim())
 
-                if (nLine === 0) {
-                    headers = this._getDataHeaderObject(formattedLine)
-                    console.log(headers)
-                } else {
-                    data.push(
-                        this._getDataRowObject(headers, formattedLine)
-                    )
+                try {
+                    if (nLine === 0) {
+                        headers = this._getDataHeaderObject(formattedLine)
+                    } else {
+                        data.push(
+                            this._getDataRowObject(headers, formattedLine)
+                        )
+                    }
+                    
+                    nLine++
+                } catch (err) {
+                    rej(err)
                 }
-                
-                nLine++
             })
 
             // Resolve promise when file is processed

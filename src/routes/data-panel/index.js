@@ -3,50 +3,48 @@ import DataTable from '~/models/DataTable'
 
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
     let queryError = false
 
-    const dataSets = await DataTable.find()
-        .exec()
-        .then((docs) =>
-            docs.map((doc) => ({
-                id: doc.id,
-                name: doc.name,
-                headers: doc.headers,
-                numRows: doc.data.length,
-                numCols: doc.headers.length
-            }))
-        )
-        .catch((err) => {
-            queryErr = true,
-            console.log(err)
+    try {
+        const dataSets = await DataTable.find()
+            .exec()
+            .then((docs) =>
+                docs.map((doc) => ({
+                    id: doc.id,
+                    name: doc.name,
+                    headers: doc.headers,
+                    numRows: doc.data.length,
+                    numCols: doc.headers.length
+                }))
+            )
+    } catch (err) {
+        console.error(err)
+        next({
+            msg: 'Error while retrieving Data sets',
+            ctx: err
         })
-
-    if (queryError) {
-        res
-            .status(500)
-            .json({
-                message: 'Error while retrieving Data sets'
-            })
-
         return
     }
 
     res.json(dataSets)
 })
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
     let dataSet = {}
-    let queryError = false
 
     try {
         dataSet = await DataTable.findById(req.params.id).exec()
     } catch(err) {
-        console.log(`Error quering: ${err}`)
-        queryError = true
+        console.error(err)
+        next({
+            msg: 'Error retrieving data set',
+            ctx: err
+        })
+        return
     }
     
-    if (queryError || !dataSet) {
+    if (!dataSet) {
         res
             .status(400)
             .json({

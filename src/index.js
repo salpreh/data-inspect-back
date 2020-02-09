@@ -1,6 +1,7 @@
 import express from 'express'
 import config from './config'
 import router from './router'
+import errorHandler from './middlewares/errorHandler'
 
 
 const server = {
@@ -11,6 +12,7 @@ const server = {
 
         config(app)
         router(app)
+        app.use(errorHandler)
 
         const port = app.get('config').PORT
         this._server = app.listen(port, () => {
