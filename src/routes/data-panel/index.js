@@ -4,7 +4,6 @@ import DataTable from '~/models/DataTable'
 const router = express.Router()
 
 router.get('/', async (req, res, next) => {
-    let queryError = false
 
     try {
         const dataSets = await DataTable.find()
@@ -18,16 +17,16 @@ router.get('/', async (req, res, next) => {
                     numCols: doc.headers.length
                 }))
             )
+    
+        res.json(dataSets)
+
     } catch (err) {
         console.error(err)
         next({
             msg: 'Error while retrieving Data sets',
             ctx: err
         })
-        return
     }
-
-    res.json(dataSets)
 })
 
 router.get('/:id', async (req, res, next) => {
