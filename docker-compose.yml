@@ -21,6 +21,16 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASS}
       MONGO_INITDB_ROOT_DATABASE: ${DB_NAME}
+
+  mongo-express:
+    image: 'mongo-express:latest'
+    ports:
+      - 8081:8081
+    environment: 
+      ME_CONFIG_OPTION_EDITORTHEME: ambiance
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASS}
     
 volumes:
   datainspect-mongo:
