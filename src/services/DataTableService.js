@@ -1,56 +1,84 @@
 import fs from 'fs'
-import readLine from 'readline'
+import path from 'path'
+import { parse } from '@fast-csv/parse'
 import DataTable from '../models/DataTable'
 
 class DataTableService {
 
     static getDataTableFromFile(filePath, fileName) {
         return new Promise((res, rej) => {
-            let nLine = 0
             let data = []
-            let headers = []
+            let headersData = []
+            let headersIndex = []
 
-            // Read file line by line
-            const rl = readLine.createInterface({
-                input: fs.createReadStream(filePath),
-                output: process.stdout,
-                console: false
-            })
-
-            rl.on('line', (line) => {
-                const formattedLine = line
-                    .split(',')
-                    .map((d) => d.replace(/"(.*)"/, '$1').trim())
-
-                try {
-                    if (nLine === 0) {
-                        headers = this._getDataHeaderObject(formattedLine)
-                    } else {
-                        data.push(
-                            this._getDataRowObject(headers, formattedLine)
-                        )
-                    }
-                    
-                    nLine++
-                } catch (err) {
+            fs.createReadStream(path.resolve(filePath))
+                .pipe(parse({ headers: true }))
+                .on('headers', (pHeaders) => {
+                    ({ headersData, headersIndex } = this._getDataHeaderAndHeaderIndex(pHeaders))
+                })
+                .on('data', (row) => {
+                    data.push(this._processDataRow(headersIndex, row))
+                })
+                .on('error', (err) => {
+                    console.error('Error parsing csv', err)
                     rej(err)
-                }
-            })
+                })
+                .on('end', (numRows) => {
+                    if (!numRows) rej(new Error('Empty csv file'))
 
-            // Resolve promise when file is processed
-            rl.on('close', () => {
-                res(
-                    new DataTable({
-                        fileName,
-                        headers,
-                        data
-                    })
-                )
-            })
+                    res(
+                        new DataTable({
+                            fileName,
+                            headers: headersData,
+                            data
+                        })
+                    )
+                })
         })
     }
     
     /**
+     * @param {[string]} headers 
+     * 
+     * @returns {Object} Object with headersData in {DataTable} format and headersKeys
+     */
+    static _getDataHeaderAndHeaderIndex(headers) {
+        let headersData = []
+        let headersIndex = []
+
+        headers.forEach((header) => {
+            const headerKey = header
+                .replace(/^([^\s]*)\s/, (str, g1) => `${g1.toLowerCase()}`)
+                .replace(/\s(\w)([^\s]*)/g, (str, g1, g2) => `${g1.toUpperCase()}${g2.toLowerCase()}`)
+
+            headersData.push({
+                name: header,
+                key: headerKey
+            })
+
+            headersIndex[header] = headerKey
+        })
+
+
+        return { headersData, headersIndex }
+    }
+
+    /**
+     * Changes row object keys for header keys
+     * 
+     * @param {Object} headersIndex Object where keys are the csv headers and values are headers keys
+     * @param {Object} rowObj 
+     */
+    static _processDataRow(headersIndex, rowObj) {
+        return Object
+            .entries(rowObj)
+            .reduce((obj, [key, val], i) =>
+                Object.defineProperty(obj, headersIndex[key], {value: val, enumerable: true})
+            , {})
+    }
+
+    /**
+     * @deprecated
      * Return a list of headers in a formatted object
      * 
      * @param {[String]} headers 
@@ -65,17 +93,6 @@ class DataTableService {
                     .replace(/\s(\w)/g, (r) => r.trim().toUpperCase())
             })
         )
-    }
-
-    /**
-     * 
-     * @param {[Object]} headersData 
-     * @param {[String]} row 
-     */
-    static _getDataRowObject(headersData, row) {
-        return row.reduce((obj, data, i) =>
-            Object.defineProperty(obj, headersData[i].key, {value: data, enumerable: true})
-        , {})
     }
 }
 

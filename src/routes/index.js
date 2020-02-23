@@ -24,19 +24,18 @@ router.post('/load-data', (req, res, next) => {
             dataTable.name = fields.name
             dataTable.save()
 
+            res
+                .status(200)
+                .json({
+                    message: 'Data recieved'
+                })
+
         } catch(err) {
             next({
                 msg: 'Error processing data file',
                 ctx: err
             })
-            return
         }
-
-        res
-            .status(200)
-            .json({
-                message: 'Data recieved'
-            })
 
     })
 })
